@@ -1,0 +1,89 @@
+name: Daily Crypto Morning Report
+
+on:
+  # Her gün sabah 08:00 Türkiye (UTC+3) = 05:00 UTC
+  # Türkiye yıl boyunca UTC+3 kullanıyor (yaz saati uygulamıyor)
+  schedule:
+    - cron: '0 5 * * *'
+  
+  # Manuel tetikleme için
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Test modu (sadece log, Telegram göndermez)'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+      NVIDIA_BASE_URL: ${{ secrets.NVIDIA_BASE_URL }}
+      NVIDIA_MODEL: ${{ secrets.NVIDIA_MODEL }}
+      CRYPTOPANIC_API_KEY: ${{ secrets.CRYPTOPANIC_API_KEY }}
+      NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+      NODE_ENV: production
+
+    steps:
+      - name: 📥 Repository'yi checkout et
+        uses: actions/checkout@v4
+
+      - name: 🟢 Node.js 20 kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Bağımlılıkları yükle
+        run: npm ci
+
+      - name: 🔨 TypeScript derle
+        run: npm run build
+
+      - name: 🧪 Test modu kontrolü
+        id: check_test
+        run: |
+          if [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
+            echo "test_mode=true" >> $GITHUB_OUTPUT
+          else
+            echo "test_mode=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🚀 Bot'u çalıştır
+        if: steps.check_test.outputs.test_mode == 'false'
+        run: npm start
+
+      - name: 🧪 Test modunda çalıştır (sadece log)
+        if: steps.check_test.outputs.test_mode == 'true'
+        run: |
+          echo "🧪 Test modu - Telegram'a gönderilmeyecek"
+          node -e "
+            require('dotenv').config();
+            const { validateConfig } = require('./dist/config.js');
+            validateConfig();
+            console.log('✅ Config OK');
+            const { testConnection } = require('./dist/sender/telegram.js');
+            testConnection().then(r => console.log('Telegram:', r.ok ? 'OK' : 'FAIL', r.error || ''));
+            const { testConnection: testNim } = require('./dist/summarizer/nim.js');
+            testNim().then(r => console.log('NVIDIA NIM:', r ? 'OK' : 'FAIL'));
+          "
+
+      - name: 📋 Özet
+        if: always()
+        run: |
+          echo "## 📊 Günlük Rapor Çalıştırma Sonucu" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tarih:** $(date -u +'%Y-%m-%d %H:%M:%S') UTC" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tetikleme:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Durum:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "- **Test Modu:** ${{ github.event.inputs.test_mode }}" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,29 @@
+{
+  "name": "crypto-morning-bot",
+  "version": "1.0.0",
+  "description": "Her sabah 08:00'de Telegram'a kripto piyasa özeti gönderen bot",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "tsx src/index.ts"
+  },
+  "keywords": ["crypto", "telegram", "bot", "github-actions", "nvidia-nim"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "node-fetch": "^3.3.2",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

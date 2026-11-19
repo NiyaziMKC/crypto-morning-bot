@@ -1,0 +1,1 @@
+{"version":3,"file":"fear-greed.d.ts","sourceRoot":"","sources":["../../src/fetchers/fear-greed.ts"],"names":[],"mappings":"AAAA;;;;GAIG;AAkCH;;;;GAIG;AACH,wBAAsB,mBAAmB,IAAI,OAAO,CAAC;IACnD,KAAK,EAAE,MAAM,CAAC;IACd,cAAc,EAAE,MAAM,CAAC;IACvB,SAAS,EAAE,MAAM,CAAC;CACnB,CAAC,CA0BD;AAED;;GAEG;AACH,wBAAgB,uBAAuB,CAAC,cAAc,EAAE,MAAM,GAAG,MAAM,CAUtE"}
